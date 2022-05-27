@@ -12,14 +12,14 @@ let lastBuildInfo = { number: 0 };
 
 export async function activate({ subscriptions }: vscode.ExtensionContext) {
 
-	const config = vscode.workspace.getConfiguration('droneMonitorSetting')
+	const config = vscode.workspace.getConfiguration('droneMonitor')
 
 	const { project } = await getRepoInfo()
 
 	const myCommandId = 'drone.openInBrowser';
 	subscriptions.push(vscode.commands.registerCommand(myCommandId, () => {
 		if (lastBuildInfo.number) {
-			vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`${config.get('droneServer')}/${project}/${lastBuildInfo.number}`));
+			vscode.commands.executeCommand('vscode.open', vscode.Uri.parse(`${config.get('server')}/${project}/${lastBuildInfo.number}`));
 		}
 	}));
 
@@ -32,6 +32,7 @@ export async function activate({ subscriptions }: vscode.ExtensionContext) {
 	pullBuildsInfo(project, config, (info) => {
 		lastBuildInfo = info;
 		myStatusBarItem.text = createText(info);
+		myStatusBarItem.tooltip = new vscode.MarkdownString(`${project} - [${info.message}](${info.link})`);
 	}, (error) => {
 		myStatusBarItem.text = String(error);
 	})

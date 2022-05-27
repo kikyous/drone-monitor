@@ -53,10 +53,10 @@ export const getRepoInfo = () =>
 
 
 export const fetchDrone = (repo: string, config: WorkspaceConfiguration) => {
-    return fetch(`${config.get("droneServer")}/api/repos/${repo}/builds/latest`, {
+    return fetch(`${config.get("server")}/api/repos/${repo}/builds/latest`, {
         headers: {
             accept: 'application/json',
-            Authorization: `Bearer ${config.get("droneToken")}`,
+            Authorization: `Bearer ${config.get("token")}`,
         },
     }).then((res) => {
         if (res.status === 200) {

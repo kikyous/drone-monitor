@@ -4,7 +4,7 @@
 	"description": "Show last drone build status in status bar",
 	"version": "0.0.2",
 	"publisher": "kikyous",
-	"private": true,
+	"icon": "res/logo.png",
 	"license": "MIT",
 	"repository": {
 		"type": "git",
@@ -24,26 +24,20 @@
 	],
 	"contributes": {
 		"configuration": {
-			"title": "Drone Monitor Configuration",
+			"title": "Drone Monitor",
 			"properties": {
-				"droneMonitorSetting": {
-					"type": "object",
-					"description": "Drone Monitor Configuration",
-					"properties": {
-						"droneServer": {
-							"type": "string",
-							"description": "drone server url"
-						},
-						"droneToken": {
-							"type": "string",
-							"description": "your personal token"
-						},
-						"interval": {
-							"type": "number",
-							"description": "Interval in seconds to check for new builds",
-							"default": 5
-						}
-					}
+				"droneMonitor.server": {
+					"type": "string",
+					"description": "Drone server url"
+				},
+				"droneMonitor.token": {
+					"type": "string",
+					"description": "Your personal token"
+				},
+				"droneMonitor.interval": {
+					"type": "number",
+					"description": "Interval in seconds to check for new builds",
+					"default": 5
 				}
 			}
 		},
