@@ -7,7 +7,7 @@ import {
     WorkspaceConfiguration,
 } from 'vscode';
 
-import * as ago from 's-ago'
+import ago from 's-ago'
 
 
 
