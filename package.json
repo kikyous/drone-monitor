@@ -2,7 +2,7 @@
 	"name": "drone-monitor",
 	"displayName": "Drone Monitor",
 	"description": "Show last drone build status in status bar",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"publisher": "kikyous",
 	"icon": "res/logo.png",
 	"license": "MIT",
