@@ -1,7 +1,11 @@
+import { execFileSync } from 'child_process';
 import fetch from 'node-fetch';
 import {
-    WorkspaceConfiguration, extensions
+    workspace,
+    WorkspaceFolder,
+    WorkspaceConfiguration,
 } from 'vscode';
+
 import ago from 's-ago'
 
 
@@ -16,15 +20,42 @@ const parseGitUrl = (url: string) => {
     };
 };
 
+export const gitClient =
+    (ws: WorkspaceFolder) =>
+        (...args: string[]) =>
+            execFileSync('git', [`--git-dir`, `${ws.uri.fsPath}/.git/`, ...args])
+                .toString()
+                .trim();
 
-const fetchDrone = (repo: string, config: WorkspaceConfiguration) => {
+export const getRepoInfo = () =>
+    new Promise<{ project: string }>((resolve, reject) => {
+        try {
+            const ws = workspace.workspaceFolders![0];
+            const git = gitClient(ws);
+
+            const branch = git('rev-parse', '--abbrev-ref', 'HEAD');
+            const remote = git('config', '--get', `branch.${branch}.remote`);
+            const url = git('config', '--get', `remote.${remote}.url`);
+
+            const { project } = parseGitUrl(url);
+
+            const info = {
+                project,
+            };
+            resolve(info);
+        } catch (err) {
+            reject(err);
+        }
+    });
+
+
+export const fetchDroneLastBuild = (repo: string, config: WorkspaceConfiguration) => {
     return fetch(`${config.get("server")}/api/repos/${repo}/builds/latest`, {
         headers: {
-            accept: 'application/json',
             Authorization: `Bearer ${config.get("token")}`,
         },
     }).then((res) => {
-        if (res.status === 200) {
+        if (res.ok) {
             return res.json();
         }
         throw new Error(`Unexpected status code: ${res.status}`);
@@ -38,7 +69,7 @@ export const pullBuildsInfo = async (repo: string, config: WorkspaceConfiguratio
     const interval = config.get('interval', 5) * 1000
     while (true) {
         try {
-            const info = await fetchDrone(repo, config);
+            const info = await fetchDroneLastBuild(repo, config);
             cb(info);
         } catch (err) {
             errCb(err);
@@ -56,41 +87,7 @@ const getVsCodeSymbol = (status: string) =>
     pending: '$(clock)',
 }[status] || '');
 
-
 export const createText = ({ status, finished, target }: { status: string, finished: number, target: string }) => {
-    const time = finished ? ago(new Date(finished*1000)) : '';
+    const time = finished ? ago(new Date(finished * 1000)) : '';
     return `${getVsCodeSymbol(status)}${status.toUpperCase()} on '${target}' ${time}`.trim();
 };
-
-
-export const getRepoState = async () => {
-	return new Promise((resolve, reject) => {
-		const gitExtension = extensions.getExtension('vscode.git')!.exports;
-		const api = gitExtension.getAPI(1);
-
-		const resolveState = () => {
-			const repo = api.repositories[0];
-			if (repo.state.HEAD) {
-				resolve(repo.state);
-			} else {
-				repo.state.onDidChange(() => {
-					resolve(repo.state)
-				})
-			}
-		}
-
-		if (api.state === 'uninitialized') {
-			api.onDidOpenRepository(resolveState);
-		} else {
-			const repo = api.repositories[0];
-			repo.state.onDidChange(resolveState)
-		}
-	})
-}
-
-export const getRemoteProject = (state: any) => {
-	const remote = state.HEAD.upstream.remote;
-	const remoteData = state.remotes.find((i: any) => i.name === remote);
-	return parseGitUrl(remoteData.pushUrl).project;
-}
-

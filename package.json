@@ -2,7 +2,7 @@
 	"name": "drone-monitor",
 	"displayName": "Drone Monitor",
 	"description": "Show last drone build status in status bar",
-	"version": "0.0.4",
+	"version": "0.0.5",
 	"publisher": "kikyous",
 	"icon": "res/logo.png",
 	"license": "MIT",
@@ -16,9 +16,6 @@
 	"engines": {
 		"vscode": "^1.32.0"
 	},
-	"extensionDependencies": [
-		"vscode.git"
-	],
 	"categories": [
 		"Other"
 	],

@@ -1,15 +1,15 @@
 import * as vscode from 'vscode';
-import { createText, getRemoteProject, getRepoState, pullBuildsInfo } from './utils';
+import { createText, getRepoInfo, pullBuildsInfo } from './utils';
 
 let myStatusBarItem: vscode.StatusBarItem;
+
 let lastBuildInfo = { number: 0, updated: 0 };
 
 
 export async function activate({ subscriptions }: vscode.ExtensionContext) {
 	const config = vscode.workspace.getConfiguration('droneMonitor')
 
-	const state = await getRepoState();
-	const project = getRemoteProject(state);
+	const { project } = await getRepoInfo()
 
 	const myCommandId = 'drone.openInBrowser';
 	subscriptions.push(vscode.commands.registerCommand(myCommandId, () => {
