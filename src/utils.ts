@@ -1,58 +1,23 @@
-import { execFileSync } from 'child_process';
 import fetch from 'node-fetch';
-import { parse } from 'url';
 import {
-    workspace,
-    WorkspaceFolder,
-    WorkspaceConfiguration,
+    WorkspaceConfiguration, extensions
 } from 'vscode';
-
 import ago from 's-ago'
 
 
-
-export const parseGitUrl = (url: string) => {
+const parseGitUrl = (url: string) => {
     const giturl = /\:\/\//.test(url) ? url : `ssh://${url.replace(/:~?/g, '/')}`;
-    const { path } = parse(giturl);
+    const { pathname } = new URL(giturl);
     return {
-        project: path!
+        project: pathname!
             .replace('.git', '')
             .replace(/^\/\/?/, '')
             .trim(),
     };
 };
 
-export const gitClient =
-    (ws: WorkspaceFolder) =>
-        (...args: string[]) =>
-            execFileSync('git', [`--git-dir`, `${ws.uri.fsPath}/.git/`, ...args])
-                .toString()
-                .trim();
 
-export const getRepoInfo = () =>
-    new Promise<{ project: string }>((resolve, reject) => {
-        try {
-            const ws = workspace.workspaceFolders![0];
-            const git = gitClient(ws);
-
-            const branch = git('rev-parse', '--abbrev-ref', 'HEAD');
-            const remote = git('config', '--get', `branch.${branch}.remote`);
-            const url = git('config', '--get', `remote.${remote}.url`);
-
-            const { project } = parseGitUrl(url);
-
-            const info = {
-                project,
-            };
-            resolve(info);
-        } catch (err) {
-            console.log(err);
-            reject(err);
-        }
-    });
-
-
-export const fetchDrone = (repo: string, config: WorkspaceConfiguration) => {
+const fetchDrone = (repo: string, config: WorkspaceConfiguration) => {
     return fetch(`${config.get("server")}/api/repos/${repo}/builds/latest`, {
         headers: {
             accept: 'application/json',
@@ -67,7 +32,7 @@ export const fetchDrone = (repo: string, config: WorkspaceConfiguration) => {
 }
 
 
-export const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export const pullBuildsInfo = async (repo: string, config: WorkspaceConfiguration, cb: (info: any) => void, errCb: (error: any) => void) => {
     const interval = config.get('interval', 5) * 1000
@@ -91,9 +56,41 @@ const getVsCodeSymbol = (status: string) =>
     pending: '$(clock)',
 }[status] || '');
 
+
 export const createText = ({ status, finished, target }: { status: string, finished: number, target: string }) => {
     const time = finished ? ago(new Date(finished*1000)) : '';
     return `${getVsCodeSymbol(status)}${status.toUpperCase()} on '${target}' ${time}`.trim();
 };
 
+
+export const getRepoState = async () => {
+	return new Promise((resolve, reject) => {
+		const gitExtension = extensions.getExtension('vscode.git')!.exports;
+		const api = gitExtension.getAPI(1);
+
+		const resolveState = () => {
+			const repo = api.repositories[0];
+			if (repo.state.HEAD) {
+				resolve(repo.state);
+			} else {
+				repo.state.onDidChange(() => {
+					resolve(repo.state)
+				})
+			}
+		}
+
+		if (api.state === 'uninitialized') {
+			api.onDidOpenRepository(resolveState);
+		} else {
+			const repo = api.repositories[0];
+			repo.state.onDidChange(resolveState)
+		}
+	})
+}
+
+export const getRemoteProject = (state: any) => {
+	const remote = state.HEAD.upstream.remote;
+	const remoteData = state.remotes.find((i: any) => i.name === remote);
+	return parseGitUrl(remoteData.pushUrl).project;
+}
 

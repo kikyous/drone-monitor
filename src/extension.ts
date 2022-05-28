@@ -1,20 +1,15 @@
-/*---------------------------------------------------------
- * Copyright (C) Microsoft Corporation. All rights reserved.
- *--------------------------------------------------------*/
-
-
 import * as vscode from 'vscode';
-import { createText, getRepoInfo, pullBuildsInfo } from './utils';
+import { createText, getRemoteProject, getRepoState, pullBuildsInfo } from './utils';
 
 let myStatusBarItem: vscode.StatusBarItem;
+let lastBuildInfo = { number: 0, updated: 0 };
 
-let lastBuildInfo = { number: 0 };
 
 export async function activate({ subscriptions }: vscode.ExtensionContext) {
-
 	const config = vscode.workspace.getConfiguration('droneMonitor')
 
-	const { project } = await getRepoInfo()
+	const state = await getRepoState();
+	const project = getRemoteProject(state);
 
 	const myCommandId = 'drone.openInBrowser';
 	subscriptions.push(vscode.commands.registerCommand(myCommandId, () => {
@@ -30,6 +25,7 @@ export async function activate({ subscriptions }: vscode.ExtensionContext) {
 	subscriptions.push(myStatusBarItem);
 
 	pullBuildsInfo(project, config, (info) => {
+		if (info.updated === lastBuildInfo.updated) { return }
 		lastBuildInfo = info;
 		myStatusBarItem.text = createText(info);
 		myStatusBarItem.tooltip = new vscode.MarkdownString(`${project} - [${info.message}](${info.link})`);
