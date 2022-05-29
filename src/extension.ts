@@ -1,9 +1,8 @@
 import * as vscode from 'vscode';
-import { createText, getRepoInfo, pullBuildsInfo } from './utils';
+import { Build, createText, getRepoInfo, pullBuildsInfo } from './utils';
 
 let myStatusBarItem: vscode.StatusBarItem;
-
-let lastBuildInfo = { number: 0, updated: 0 };
+let lastBuildInfo : Build = { number: 0, status: '', finished: 0, target: '', message: '', link: '' };
 
 
 export async function activate({ subscriptions }: vscode.ExtensionContext) {
@@ -25,7 +24,7 @@ export async function activate({ subscriptions }: vscode.ExtensionContext) {
 	subscriptions.push(myStatusBarItem);
 
 	pullBuildsInfo(project, config, (info) => {
-		if (info.updated === lastBuildInfo.updated) { return }
+		if (info.number === lastBuildInfo.number && info.status === lastBuildInfo.status) { return }
 		lastBuildInfo = info;
 		myStatusBarItem.text = createText(info);
 		myStatusBarItem.tooltip = new vscode.MarkdownString(`${project} - [${info.message}](${info.link})`);

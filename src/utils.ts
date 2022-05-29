@@ -8,6 +8,14 @@ import {
 
 import ago from 's-ago'
 
+export interface Build {
+	number: number;
+	status: string;
+    finished: number;
+    target: string;
+    message: string;
+    link: string;
+}
 
 const parseGitUrl = (url: string) => {
     const giturl = /\:\/\//.test(url) ? url : `ssh://${url.replace(/:~?/g, '/')}`;
@@ -56,7 +64,7 @@ export const fetchDroneLastBuild = (repo: string, config: WorkspaceConfiguration
         },
     }).then((res) => {
         if (res.ok) {
-            return res.json();
+            return res.json() as Promise<Build>;
         }
         throw new Error(`Unexpected status code: ${res.status}`);
     });
@@ -65,7 +73,7 @@ export const fetchDroneLastBuild = (repo: string, config: WorkspaceConfiguration
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-export const pullBuildsInfo = async (repo: string, config: WorkspaceConfiguration, cb: (info: any) => void, errCb: (error: any) => void) => {
+export const pullBuildsInfo = async (repo: string, config: WorkspaceConfiguration, cb: (info: Build) => void, errCb: (error: any) => void) => {
     const interval = config.get('interval', 5) * 1000
     while (true) {
         try {
