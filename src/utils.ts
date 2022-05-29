@@ -9,8 +9,8 @@ import {
 import ago from 's-ago'
 
 export interface Build {
-	number: number;
-	status: string;
+    number: number;
+    status: string;
     finished: number;
     target: string;
     message: string;

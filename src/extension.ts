@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { Build, createText, getRepoInfo, pullBuildsInfo } from './utils';
 
 let myStatusBarItem: vscode.StatusBarItem;
-let lastBuildInfo : Build = { number: 0, status: '', finished: 0, target: '', message: '', link: '' };
+let lastBuildInfo: Build = { number: 0, status: '', finished: 0, target: '', message: '', link: '' };
 
 
 export async function activate({ subscriptions }: vscode.ExtensionContext) {
