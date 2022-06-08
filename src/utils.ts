@@ -90,7 +90,7 @@ export const pullBuildsInfo = async (repo: string, config: WorkspaceConfiguratio
 const getVsCodeSymbol = (status: string) =>
 ({
     success: '$(check)',
-    failed: '$(x)',
+    failure: '$(x)',
     running: '$(triangle-right)',
     pending: '$(clock)',
 }[status] || '');
